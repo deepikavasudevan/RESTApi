@@ -18,8 +18,8 @@ public class ProjectService {
     public AbstractMap.SimpleEntry<Boolean, String> create(String requestContents) {
         try {
             JSONObject requestJson = new JSONObject(requestContents);
-            AbstractMap.SimpleEntry<Boolean, String> message = validateJSONContents(requestJson);
-            if (message != null) return message;
+            AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestJson);
+            if (result != null) return result;
         } catch (JSONException exception) {
             String message = "The request contains malformed JSON";
             logger.error(message);
@@ -37,6 +37,7 @@ public class ProjectService {
         }
     }
 
+    //Checks if the contents of the request is valid
     private AbstractMap.SimpleEntry<Boolean, String> validateJSONContents(JSONObject requestJson) {
         //Contains more than the number of expected fields
         if (requestJson.length() != 9) {

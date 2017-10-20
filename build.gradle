@@ -2,13 +2,15 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'idea'
 
+sourceSets.main.java.srcDirs = ['src']
+mainClassName = "deepikavasudevan.project.ProjectApplication"
+
 idea {
     module {
         sourceDirs += file('src')
         testSourceDirs += file('test')
     }
 }
-mainClassName = "deepikavasudevan.project.ProjectApplication"
 
 repositories {
     mavenCentral()

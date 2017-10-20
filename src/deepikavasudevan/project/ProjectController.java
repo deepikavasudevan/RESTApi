@@ -29,6 +29,18 @@ public class ProjectController {
     };
 
     public static Route requestProject = (Request request, Response response) -> {
-        return "Hello there";
+        String projectId = request.queryParams("projectid");
+        String country = request.queryParams("country");
+        String number = request.queryParams("number");
+        String keyword = request.queryParams("keyword");
+
+        if(projectId == null && country == null && number == null && keyword == null) {
+            response.status(400);
+            String message = "Request must have at least one search parameter";
+            response.body(message);
+            return message;
+        }
+
+        return "";
     };
 }
