@@ -19,9 +19,9 @@ public class ProjectController {
             response.type("application/json");
             return message;
         } else {
-            logger.error("Error in writing to the file");
+            logger.error("ERROR in processing request. Check the request and try again.");
             response.status(400);
-            response.body("Error in writing to the file");
+            response.body("ERROR in processing request. Check the request and try again.");
             return response.body();
         }
     };

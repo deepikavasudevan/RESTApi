@@ -1,6 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'application'
-sourceSets.main.java.srcDirs = ['src']
+apply plugin: 'idea'
+
+idea {
+    module {
+        sourceDirs += file('src')
+        testSourceDirs += file('test')
+    }
+}
 mainClassName = "deepikavasudevan.project.ProjectApplication"
 
 repositories {
@@ -12,4 +19,5 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-api:2.1"
     compile "org.apache.logging.log4j:log4j-core:2.1"
     compile "org.json:json:20080701"
+    testCompile "junit:junit:4.11"
 }
