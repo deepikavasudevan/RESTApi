@@ -6,23 +6,25 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
+import java.util.AbstractMap;
+
 public class ProjectController {
     static Logger logger = LogManager.getLogger("ProjectController");
 
 
     public static Route createProject = (Request request, Response response) -> {
         ProjectService service = new ProjectService();
-        if(service.create(request.body())) {
-            String message = "Campaign is successfully created";
-            logger.info(message);
+        AbstractMap.SimpleEntry<Boolean, String> result = service.create(request.body());
+        if(result.getKey()) {
+            logger.info(result.getValue());
             response.status(200);
             response.type("application/json");
-            return message;
+            return result.getValue();
         } else {
-            logger.error("ERROR in processing request. Check the request and try again.");
+            logger.error(result.getValue());
             response.status(400);
-            response.body("ERROR in processing request. Check the request and try again.");
-            return response.body();
+            response.body(result.getValue());
+            return result.getValue();
         }
     };
 
