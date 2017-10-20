@@ -13,8 +13,12 @@ public class ProjectService {
         try {
             JSONObject requestJson = new JSONObject(requestContents);
             //Contains more than the number of expected fields
-            if(requestJson.length() > 9) {
+            if(requestJson.length() != 9) {
                 logger.error("More number of fields found in the request");
+                return false;
+            }
+            if(requestJson.isNull("id")) {
+                logger.error("Request does not contain ID");
                 return false;
             }
         } catch (JSONException exception) {
