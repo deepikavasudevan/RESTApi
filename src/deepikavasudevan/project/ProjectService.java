@@ -25,6 +25,12 @@ public class ProjectService {
             if (!isAValidField(requestJson, "id")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain ID");
             if (!isAValidField(requestJson, "projectName")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain projectName");
             if (!isAValidField(requestJson, "creationDate")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain creationDate");
+            if (!isAValidField(requestJson, "expiryDate")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain expiryDate");
+            if (!isAValidField(requestJson, "enabled")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain enabled");
+            if (!isAValidField(requestJson, "targetCountries")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain targetCountries");
+            if (!isAValidField(requestJson, "projectCost")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain projectCost");
+            if (!isAValidField(requestJson, "projectUrl")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain projectUrl");
+            if (!isAValidField(requestJson, "targetKeys")) return new AbstractMap.SimpleEntry<>(false, "Request does not contain targetKeys");
 
         } catch (JSONException exception) {
             String message = "The request contains malformed JSON";
