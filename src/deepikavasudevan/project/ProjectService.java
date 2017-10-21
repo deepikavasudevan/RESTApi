@@ -13,6 +13,7 @@ import java.util.HashMap;
 
 public class ProjectService {
     static String fileName = "projects.txt";
+    FilesOperator filesOperator = new FilesOperator(fileName);
     static Logger logger = LogManager.getLogger("ProjectService");
 
     public AbstractMap.SimpleEntry<Boolean, String> create(String requestContents) {
@@ -21,14 +22,13 @@ public class ProjectService {
             AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestJson);
             if (result != null) return result;
         } catch (JSONException exception) {
-            String message = "The request contains malformed JSON";
-            logger.error(message);
-            return new AbstractMap.SimpleEntry<>(false, message);
+            logger.error(exception.getMessage());
+            return new AbstractMap.SimpleEntry<>(false, exception.getMessage());
         }
 
         try {
             logger.info("Writing content from request to the file");
-            writeToFile(requestContents);
+            filesOperator.writeToFile(requestContents);
             return new AbstractMap.SimpleEntry<>(true, "Campaign is successfully created");
         } catch (IOException exception) {
             String message = "Error in writing contents to the file";
@@ -67,15 +67,6 @@ public class ProjectService {
         return null;
     }
 
-    private void writeToFile(String requestContents) throws IOException {
-        FileWriter writer = new FileWriter(fileName, true);
-        BufferedWriter bufferedWriter = new BufferedWriter(writer);
-        bufferedWriter.write(requestContents + ",");
-        bufferedWriter.newLine();
-        bufferedWriter.flush();
-        bufferedWriter.close();
-    }
-
     private boolean isAValidField(JSONObject requestJson, String field) {
         if (requestJson.isNull(field)) {
             return false;
@@ -84,26 +75,9 @@ public class ProjectService {
     }
 
     public AbstractMap.SimpleEntry<Boolean, String> get(HashMap<String, String> queries) {
-        String line, contents = "[";
+        String contents;
         try {
-            File file = new File(fileName);
-            FileInputStream stream = new FileInputStream(file);
-            DataInputStream data = new DataInputStream(stream);
-            InputStreamReader bream = new InputStreamReader(data);
-            BufferedReader reader = new BufferedReader(bream);
-
-            while ((line = reader.readLine()) != null) {
-                contents += line;
-            }
-
-            if (contents.endsWith(",")) {
-                contents = contents.substring(0, contents.length() - 1) + "]";
-            }
-
-            data.close();
-            bream.close();
-            stream.close();
-
+            contents = filesOperator.getContentsFromFile();
         } catch (FileNotFoundException exception) {
             String message = "Error in reading contents from the file";
             logger.error(message);
@@ -116,63 +90,6 @@ public class ProjectService {
 
         String response = "[";
         boolean addResponse = true;
-        JSONObject project;
-        try {
-            JSONObject jsonContents = new JSONObject(contents);
-            JSONArray projectArray = jsonContents.getJSONArray("project");
-
-            for (int i = 0; i < projectArray.length(); i++) {
-                project = projectArray.getJSONObject(i);
-                if (queries.containsKey("id") && !project.isNull("id")) {
-                    if (queries.get("id") == project.get("id")) {
-                        addResponse = true;
-                    } else {
-                        addResponse = false;
-                    }
-                }
-
-                if (queries.containsKey("targetCountries") && !project.isNull("targetCountries")) {
-                    if (queries.get("targetCountries") == project.get("targetCountries")) {
-                        addResponse = true;
-                    } else {
-                        addResponse = false;
-                    }
-                }
-
-                if (queries.containsKey("number") || queries.containsKey("keyword") && !project.isNull("targetKeys")) {
-                    JSONArray targetKeys = project.getJSONArray("targetKeys");
-                    JSONObject targetKey;
-                    for (int j = 0; j < targetKeys.length(); j++) {
-                        targetKey = targetKeys.getJSONObject(j);
-
-                        if (queries.containsKey("number") && !targetKey.isNull("number")) {
-                            if (queries.get("number") == project.get("number")) {
-                                addResponse = true;
-                            } else {
-                                addResponse = false;
-                            }
-                        }
-
-                        if (queries.containsKey("keyword") && !targetKey.isNull("keyword")) {
-                            if (queries.get("keyword") == project.get("keyword")) {
-                                addResponse = true;
-                            } else {
-                                addResponse = false;
-                            }
-                        }
-                    }
-                }
-
-                if (addResponse)
-                    response += project.toString();
-
-            }
-            response += "]";
-        } catch (JSONException e) {
-            String message = "The JSON in the file could not be parsed";
-            logger.error(message);
-            return new AbstractMap.SimpleEntry<>(false, message);
-        }
 
         return new AbstractMap.SimpleEntry<>(true, response);
     }
