@@ -93,7 +93,6 @@ public class ProjectServiceTests {
         AbstractMap.SimpleEntry<Boolean, String> result = projectService.create(json);
         Assert.assertFalse(result.getKey());
         Assert.assertEquals("Request does not contain projectName", result.getValue());
-
     }
 
     @Test
