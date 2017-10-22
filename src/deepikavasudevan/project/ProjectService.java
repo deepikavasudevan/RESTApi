@@ -1,17 +1,19 @@
 package deepikavasudevan.project;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import deepikavasudevan.project.JSONModels.Project;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class ProjectService {
@@ -91,73 +93,45 @@ public class ProjectService {
             logger.error(message);
             return new AbstractMap.SimpleEntry<>(false, message);
         }
+
+        List<Project> projects;
         String response = "[";
         try {
-            ObjectMapper object = new ObjectMapper();
-            TypeReference<List<Project>> mapType = new TypeReference<List<Project>>() {
-            };
-            List<Project> projects = object.readValue(contents, mapType);
-            ProjectParser projectParser = new ProjectParser(projects);
-
-            object.enable(SerializationFeature.INDENT_OUTPUT);
-            boolean addResponse = true;
-            for (Project project : projects) {
-                if (queries.containsKey("projectid")) {
-                    if (Arrays.asList(queries.get("projectid")).contains(project.id)) {
-                        addResponse = true;
-                    } else {
-                        addResponse = false;
-                    }
-                }
-
-                if (queries.containsKey("country")) {
-                    if (!Collections.disjoint(Arrays.asList(queries.get("country")), Arrays.asList(project.targetCountries))) {
-                        addResponse = true;
-                    } else {
-                        addResponse = false;
-                    }
-                }
-
-                if (queries.containsKey("number")) {
-                    for (TargetKeys target : project.targetKeys) {
-                        if (Arrays.asList(queries.get("number")).contains(target.number)) {
-                            addResponse = true;
-                        } else {
-                            addResponse = false;
-                        }
-                    }
-                }
-
-                if (queries.containsKey("keyword")) {
-                    for (TargetKeys target : project.targetKeys) {
-                        if (Arrays.asList(queries.get("keyword")).contains(target.keyword)) {
-                            addResponse = true;
-                        } else {
-                            addResponse = false;
-                        }
-                    }
-                }
-
-                if (addResponse)
-                    response += object.writeValueAsString(project) + ",";
-
-            }
-        } catch (JsonGenerationException exception) {
-            logger.error(exception.getMessage());
-            return new AbstractMap.SimpleEntry<>(false, "Request is invalid. Please try again.");
-        } catch (JsonMappingException exception) {
-            logger.error(exception.getMessage());
-            return new AbstractMap.SimpleEntry<>(false, "Request is invalid. Please try again.");
+            projects = getProjects(contents);
+        } catch (IOException e) {
+            String message = "Error in parsing contents in file to JSON";
+            logger.error(message);
+            return new AbstractMap.SimpleEntry<>(false, message);
         }
 
+        ObjectMapper object = new ObjectMapper();
+        ProjectParser projectParser = new ProjectParser(queries);
+        object.enable(SerializationFeature.INDENT_OUTPUT);
+
+        for (Project project : projects) {
+            boolean addResponse = projectParser.match(project);
+            if (addResponse)
+                response += object.writeValueAsString(project) + ",";
+        }
+
+        /*Append with ] to print out valid JSON*/
         if (response.endsWith(",")) {
             response = response.substring(0, response.length() - 1) + "]";
         }
 
+        /*No project has been matched and added to response*/
         if (response.trim().endsWith("[")) {
             return new AbstractMap.SimpleEntry<>(false, "No project matches this search");
         }
 
         return new AbstractMap.SimpleEntry<>(true, response);
     }
+
+    private List<Project> getProjects(String contents) throws IOException {
+        ObjectMapper object = new ObjectMapper();
+        TypeReference<List<Project>> mapType = new TypeReference<List<Project>>() {
+        };
+        return object.readValue(contents, mapType);
+    }
+
 }

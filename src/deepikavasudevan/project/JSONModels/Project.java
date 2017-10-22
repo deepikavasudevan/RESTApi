@@ -1,4 +1,4 @@
-package deepikavasudevan.project;
+package deepikavasudevan.project.JSONModels;
 
 import java.util.List;
 
