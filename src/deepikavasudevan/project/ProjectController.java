@@ -31,23 +31,6 @@ public class ProjectController {
 
     public static Route requestProject = (Request request, Response response) -> {
         ProjectService service = new ProjectService();
-        HashMap<String, String> queries = new HashMap<>();
-        String projectId = request.queryParams("projectid");
-        String country = request.queryParams("country");
-        String number = request.queryParams("number");
-        String keyword = request.queryParams("keyword");
-
-        //Checks if the parameter exists
-        if ((projectId == null || projectId.length() == 0)
-                && (country == null || country.length() == 0)
-                && (number == null || number.length() == 0)
-                && (keyword == null || keyword.length() == 0)) {
-            response.status(400);
-            String message = "Request must have at least one search parameter";
-            response.body(message);
-            return message;
-        }
-
         AbstractMap.SimpleEntry<Boolean, String> result = service.get(request.queryMap().toMap());
         if (result.getKey()) {
             logger.info(result.getValue());

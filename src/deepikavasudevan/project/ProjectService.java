@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -92,13 +91,14 @@ public class ProjectService {
             logger.error(message);
             return new AbstractMap.SimpleEntry<>(false, message);
         }
-
         String response = "[";
         try {
             ObjectMapper object = new ObjectMapper();
             TypeReference<List<Project>> mapType = new TypeReference<List<Project>>() {
             };
             List<Project> projects = object.readValue(contents, mapType);
+            ProjectParser projectParser = new ProjectParser(projects);
+
             object.enable(SerializationFeature.INDENT_OUTPUT);
             boolean addResponse = true;
             for (Project project : projects) {
