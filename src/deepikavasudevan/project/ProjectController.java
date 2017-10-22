@@ -48,24 +48,7 @@ public class ProjectController {
             return message;
         }
 
-        if (projectId != null && projectId.length() > 0) {
-            queries.put("id", projectId);
-        }
-
-        if (country != null && country.length() > 0) {
-            queries.put("targetCountries", country);
-        }
-
-        if (number != null && number.length() > 0) {
-            queries.put("number", number);
-        }
-
-        if (keyword != null && keyword.length() > 0) {
-            queries.put("keyword", keyword);
-        }
-
-        service.get(queries);
-        AbstractMap.SimpleEntry<Boolean, String> result = service.create(request.body());
+        AbstractMap.SimpleEntry<Boolean, String> result = service.get(request.queryMap().toMap());
         if (result.getKey()) {
             logger.info(result.getValue());
             response.status(200);

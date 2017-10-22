@@ -1,14 +1,18 @@
 package deepikavasudevan.project;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
-import java.util.AbstractMap;
-import java.util.HashMap;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
 
 
 public class ProjectService {
@@ -17,6 +21,7 @@ public class ProjectService {
     static Logger logger = LogManager.getLogger("ProjectService");
 
     public AbstractMap.SimpleEntry<Boolean, String> create(String requestContents) {
+        /*checks if inputted JSON is valid*/
         try {
             JSONObject requestJson = new JSONObject(requestContents);
             AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestJson);
@@ -26,6 +31,7 @@ public class ProjectService {
             return new AbstractMap.SimpleEntry<>(false, exception.getMessage());
         }
 
+        /*Writes to the file*/
         try {
             logger.info("Writing content from request to the file");
             filesOperator.writeToFile(requestContents);
@@ -37,9 +43,8 @@ public class ProjectService {
         }
     }
 
-    //Checks if the contents of the request is valid
     private AbstractMap.SimpleEntry<Boolean, String> validateJSONContents(JSONObject requestJson) {
-        //Contains more than the number of expected fields
+        //Checks if it contains more than the number of expected fields
         if (requestJson.length() != 9) {
             String message = "More number of fields found in the request";
             logger.error(message);
@@ -74,7 +79,7 @@ public class ProjectService {
         return true;
     }
 
-    public AbstractMap.SimpleEntry<Boolean, String> get(HashMap<String, String> queries) {
+    public AbstractMap.SimpleEntry<Boolean, String> get(Map<String, String[]> queries) throws IOException {
         String contents;
         try {
             contents = filesOperator.getContentsFromFile();
@@ -89,7 +94,69 @@ public class ProjectService {
         }
 
         String response = "[";
-        boolean addResponse = true;
+        try {
+            ObjectMapper object = new ObjectMapper();
+            TypeReference<List<Project>> mapType = new TypeReference<List<Project>>() {
+            };
+            List<Project> projects = object.readValue(contents, mapType);
+            object.enable(SerializationFeature.INDENT_OUTPUT);
+            boolean addResponse = true;
+            for (Project project : projects) {
+                if (queries.containsKey("projectid")) {
+                    if (Arrays.asList(queries.get("projectid")).contains(project.id)) {
+                        addResponse = true;
+                    } else {
+                        addResponse = false;
+                    }
+                }
+
+                if (queries.containsKey("country")) {
+                    if (!Collections.disjoint(Arrays.asList(queries.get("country")), Arrays.asList(project.targetCountries))) {
+                        addResponse = true;
+                    } else {
+                        addResponse = false;
+                    }
+                }
+
+                if (queries.containsKey("number")) {
+                    for (TargetKeys target : project.targetKeys) {
+                        if (Arrays.asList(queries.get("number")).contains(target.number)) {
+                            addResponse = true;
+                        } else {
+                            addResponse = false;
+                        }
+                    }
+                }
+
+                if (queries.containsKey("keyword")) {
+                    for (TargetKeys target : project.targetKeys) {
+                        if (Arrays.asList(queries.get("keyword")).contains(target.keyword)) {
+                            addResponse = true;
+                        } else {
+                            addResponse = false;
+                        }
+                    }
+                }
+
+                if (addResponse)
+                    response += object.writeValueAsString(project) + ",";
+
+            }
+        } catch (JsonGenerationException exception) {
+            logger.error(exception.getMessage());
+            return new AbstractMap.SimpleEntry<>(false, "Request is invalid. Please try again.");
+        } catch (JsonMappingException exception) {
+            logger.error(exception.getMessage());
+            return new AbstractMap.SimpleEntry<>(false, "Request is invalid. Please try again.");
+        }
+
+        if (response.endsWith(",")) {
+            response = response.substring(0, response.length() - 1) + "]";
+        }
+
+        if (response.trim().endsWith("[")) {
+            return new AbstractMap.SimpleEntry<>(false, "No project matches this search");
+        }
 
         return new AbstractMap.SimpleEntry<>(true, response);
     }
