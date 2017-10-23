@@ -23,7 +23,7 @@ public class ProjectService {
     static Logger logger = LogManager.getLogger("ProjectService");
 
     public AbstractMap.SimpleEntry<Boolean, String> create(String requestContents) {
-        /*checks if inputted JSON is valid*/
+        /*Checks if inputted JSON is valid*/
         try {
             JSONObject requestJson = new JSONObject(requestContents);
             AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestJson);
@@ -35,7 +35,12 @@ public class ProjectService {
 
         /*Writes to the file*/
         logger.info("Writing content from request to the file");
-        filesOperator.writeToFile(requestContents);
+        try {
+            filesOperator.writeToFile(requestContents);
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return new AbstractMap.SimpleEntry<>(false, "Could not write to the file");
+        }
         return new AbstractMap.SimpleEntry<>(true, "Campaign is successfully created");
     }
 
@@ -75,9 +80,13 @@ public class ProjectService {
         return true;
     }
 
-    public AbstractMap.SimpleEntry<Boolean, String> get(Map<String, String[]> queries) throws IOException {
-        String contents;
-        contents = filesOperator.getContentsFromFile();
+    public AbstractMap.SimpleEntry<Boolean, String> get(Map<String, String[]> queries) {
+        String contents = "";
+        try {
+            contents = filesOperator.getContentsFromFile();
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
 
         List<Project> projects;
         List<ProjectDTO> addedProjects = new ArrayList<>();
@@ -101,7 +110,14 @@ public class ProjectService {
         }
 
         if (addedProjects.size() > 0) {
-            String response = object.writeValueAsString(addedProjects);
+            String response;
+            try {
+                response = object.writeValueAsString(addedProjects);
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+                return new AbstractMap.SimpleEntry<>(false, "Could not fetch the correct response.");
+            }
+
             return new AbstractMap.SimpleEntry<>(true, response);
         } else {
             String response = "No projects found that match this criteria";

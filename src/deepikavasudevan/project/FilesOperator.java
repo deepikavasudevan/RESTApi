@@ -14,42 +14,34 @@ public class FilesOperator {
         this.fileName = filename;
     }
 
-    public void writeToFile(String requestContents) {
-        try {
-            FileWriter writer = new FileWriter(fileName, true);
-            BufferedWriter bufferedWriter = new BufferedWriter(writer);
-            bufferedWriter.write(requestContents + ",");
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
-            bufferedWriter.close();
-        } catch (IOException ex) {
-            logger.error("Could not write to the file");
-        }
+    public void writeToFile(String requestContents) throws IOException {
+        FileWriter writer = new FileWriter(fileName, true);
+        BufferedWriter bufferedWriter = new BufferedWriter(writer);
+        bufferedWriter.write(requestContents + ",");
+        bufferedWriter.newLine();
+        bufferedWriter.flush();
+        bufferedWriter.close();
     }
 
-    public String getContentsFromFile() {
+    public String getContentsFromFile() throws IOException {
         String line, contents = "[";
         File file = new File(fileName);
-        try {
-            FileInputStream stream = new FileInputStream(file);
-            DataInputStream data = new DataInputStream(stream);
-            InputStreamReader bream = new InputStreamReader(data);
-            BufferedReader reader = new BufferedReader(bream);
+        FileInputStream stream = new FileInputStream(file);
+        DataInputStream data = new DataInputStream(stream);
+        InputStreamReader bream = new InputStreamReader(data);
+        BufferedReader reader = new BufferedReader(bream);
 
-            while ((line = reader.readLine()) != null) {
-                contents += line;
-            }
-
-            if (contents.endsWith(",")) {
-                contents = contents.substring(0, contents.length() - 1) + "]";
-            }
-
-            data.close();
-            bream.close();
-            stream.close();
-        } catch(IOException ex) {
-            logger.error("Could not read from the file");
+        while ((line = reader.readLine()) != null) {
+            contents += line;
         }
+
+        if (contents.endsWith(",")) {
+            contents = contents.substring(0, contents.length() - 1) + "]";
+        }
+
+        data.close();
+        bream.close();
+        stream.close();
 
         return contents;
     }
