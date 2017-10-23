@@ -10,8 +10,6 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -36,15 +34,9 @@ public class ProjectService {
         }
 
         /*Writes to the file*/
-        try {
-            logger.info("Writing content from request to the file");
-            filesOperator.writeToFile(requestContents);
-            return new AbstractMap.SimpleEntry<>(true, "Campaign is successfully created");
-        } catch (IOException exception) {
-            String message = "Error in writing contents to the file";
-            logger.error(message);
-            return new AbstractMap.SimpleEntry<>(false, message);
-        }
+        logger.info("Writing content from request to the file");
+        filesOperator.writeToFile(requestContents);
+        return new AbstractMap.SimpleEntry<>(true, "Campaign is successfully created");
     }
 
     private AbstractMap.SimpleEntry<Boolean, String> validateJSONContents(JSONObject requestJson) {
@@ -85,17 +77,7 @@ public class ProjectService {
 
     public AbstractMap.SimpleEntry<Boolean, String> get(Map<String, String[]> queries) throws IOException {
         String contents;
-        try {
-            contents = filesOperator.getContentsFromFile();
-        } catch (FileNotFoundException exception) {
-            String message = "Error in reading contents from the file";
-            logger.error(message);
-            return new AbstractMap.SimpleEntry<>(false, message);
-        } catch (IOException e) {
-            String message = "Error in reading contents from the file";
-            logger.error(message);
-            return new AbstractMap.SimpleEntry<>(false, message);
-        }
+        contents = filesOperator.getContentsFromFile();
 
         List<Project> projects;
         List<ProjectDTO> addedProjects = new ArrayList<>();
