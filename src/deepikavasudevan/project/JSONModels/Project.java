@@ -88,4 +88,41 @@ public class Project {
     public ProjectDTO toProjectDTO() {
         return new ProjectDTO(projectName, projectCost, projectUrl);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Project project = (Project) o;
+
+        if (enabled != project.enabled) return false;
+        if (Double.compare(project.projectCost, projectCost) != 0) return false;
+        if (id != null ? !id.equals(project.id) : project.id != null) return false;
+        if (projectName != null ? !projectName.equals(project.projectName) : project.projectName != null) return false;
+        if (creationDate != null ? !creationDate.equals(project.creationDate) : project.creationDate != null)
+            return false;
+        if (expiryDate != null ? !expiryDate.equals(project.expiryDate) : project.expiryDate != null) return false;
+        if (targetCountries != null ? !targetCountries.equals(project.targetCountries) : project.targetCountries != null)
+            return false;
+        if (projectUrl != null ? !projectUrl.equals(project.projectUrl) : project.projectUrl != null) return false;
+        return targetKeys != null ? targetKeys.equals(project.targetKeys) : project.targetKeys == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (projectName != null ? projectName.hashCode() : 0);
+        result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
+        result = 31 * result + (expiryDate != null ? expiryDate.hashCode() : 0);
+        result = 31 * result + (enabled ? 1 : 0);
+        result = 31 * result + (targetCountries != null ? targetCountries.hashCode() : 0);
+        temp = Double.doubleToLongBits(projectCost);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (projectUrl != null ? projectUrl.hashCode() : 0);
+        result = 31 * result + (targetKeys != null ? targetKeys.hashCode() : 0);
+        return result;
+    }
 }

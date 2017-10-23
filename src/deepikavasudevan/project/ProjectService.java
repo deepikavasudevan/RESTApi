@@ -12,12 +12,12 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 
 public class ProjectService {
+    final int numberOfFields = 9;
     static String fileName = "projects.txt";
     FilesOperator filesOperator = new FilesOperator(fileName);
     static Logger logger = LogManager.getLogger("ProjectService");
@@ -25,8 +25,7 @@ public class ProjectService {
     public AbstractMap.SimpleEntry<Boolean, String> create(String requestContents) {
         /*Checks if inputted JSON is valid*/
         try {
-            JSONObject requestJson = new JSONObject(requestContents);
-            AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestJson);
+            AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestContents);
             if (result != null) return result;
         } catch (JSONException exception) {
             logger.error(exception.getMessage());
@@ -44,10 +43,11 @@ public class ProjectService {
         return new AbstractMap.SimpleEntry<>(true, "Campaign is successfully created");
     }
 
-    private AbstractMap.SimpleEntry<Boolean, String> validateJSONContents(JSONObject requestJson) {
+    private AbstractMap.SimpleEntry<Boolean, String> validateJSONContents(String requestContents) throws JSONException {
+        JSONObject requestJson = new JSONObject(requestContents);
         //Checks if it contains more than the number of expected fields
-        if (requestJson.length() != 9) {
-            String message = "More number of fields found in the request";
+        if (requestJson.length() != numberOfFields) {
+            String message = "Number of fields present is not equal to number of expected fields";
             logger.error(message);
             return new AbstractMap.SimpleEntry<>(false, message);
         }
@@ -73,6 +73,7 @@ public class ProjectService {
         return null;
     }
 
+    /*Checks whether the file contains a null value or not*/
     private boolean isAValidField(JSONObject requestJson, String field) {
         if (requestJson.isNull(field)) {
             return false;
@@ -82,15 +83,16 @@ public class ProjectService {
 
     public AbstractMap.SimpleEntry<Boolean, String> get(Map<String, String[]> queries) {
         String contents = "";
+        List<Project> projects;
+
+        /*Read from the file*/
         try {
             contents = filesOperator.getContentsFromFile();
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
 
-        List<Project> projects;
-        List<ProjectDTO> addedProjects = new ArrayList<>();
-
+        /*Convert the file contents to JSON Objects*/
         try {
             projects = getProjects(contents);
         } catch (IOException e) {
@@ -103,16 +105,13 @@ public class ProjectService {
         ProjectParser projectParser = new ProjectParser(queries);
         object.enable(SerializationFeature.INDENT_OUTPUT);
 
-        for (Project project : projects) {
-            boolean addResponse = projectParser.match(project);
-            if (addResponse)
-                addedProjects.add(project.toProjectDTO());
-        }
+        /*Check if project satisfies conditions*/
+        ProjectDTO selectedProject = projectParser.getMatchingProjects(projects);
 
-        if (addedProjects.size() > 0) {
+        if (selectedProject != null) {
             String response;
             try {
-                response = object.writeValueAsString(addedProjects);
+                response = object.writeValueAsString(selectedProject);
             } catch (IOException e) {
                 logger.error(e.getMessage());
                 return new AbstractMap.SimpleEntry<>(false, "Could not fetch the correct response.");
@@ -120,7 +119,7 @@ public class ProjectService {
 
             return new AbstractMap.SimpleEntry<>(true, response);
         } else {
-            String response = "No projects found that match this criteria";
+            String response = "No projects found that matchToSearchCriteria this criteria";
             return new AbstractMap.SimpleEntry<>(false, response);
         }
     }

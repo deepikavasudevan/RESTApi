@@ -15,14 +15,14 @@ public class FilesOperatorTests {
     FilesOperator filesOperator = new FilesOperator(filename);
 
     @Test
-    public void createFileAndWritesIntoIt() {
+    public void createFileAndWritesIntoIt() throws IOException {
         filesOperator.writeToFile("Hello there");
         Path path = Paths.get(filename);
         Assert.assertTrue(Files.exists(path));
     }
 
     @Test
-    public void readFromFileAndDisplaysContents() {
+    public void readFromFileAndDisplaysContents() throws IOException {
         filesOperator.writeToFile("Hello there");
         String contents = filesOperator.getContentsFromFile();
         Assert.assertEquals("[Hello there]", contents);
