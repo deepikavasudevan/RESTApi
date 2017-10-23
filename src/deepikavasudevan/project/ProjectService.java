@@ -4,14 +4,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import deepikavasudevan.project.JSONModels.Project;
+import deepikavasudevan.project.JSONModels.ProjectDTO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +98,8 @@ public class ProjectService {
         }
 
         List<Project> projects;
-        String response = "[";
+        List<ProjectDTO> addedProjects = new ArrayList<>();
+
         try {
             projects = getProjects(contents);
         } catch (IOException e) {
@@ -111,20 +115,16 @@ public class ProjectService {
         for (Project project : projects) {
             boolean addResponse = projectParser.match(project);
             if (addResponse)
-                response += object.writeValueAsString(project) + ",";
+                addedProjects.add(project.toProjectDTO());
         }
 
-        /*Append with ] to print out valid JSON*/
-        if (response.endsWith(",")) {
-            response = response.substring(0, response.length() - 1) + "]";
+        if (addedProjects.size() > 0) {
+            String response = object.writeValueAsString(addedProjects);
+            return new AbstractMap.SimpleEntry<>(true, response);
+        } else {
+            String response = "No projects found that match this criteria";
+            return new AbstractMap.SimpleEntry<>(false, response);
         }
-
-        /*No project has been matched and added to response*/
-        if (response.trim().endsWith("[")) {
-            return new AbstractMap.SimpleEntry<>(false, "No project matches this search");
-        }
-
-        return new AbstractMap.SimpleEntry<>(true, response);
     }
 
     private List<Project> getProjects(String contents) throws IOException {

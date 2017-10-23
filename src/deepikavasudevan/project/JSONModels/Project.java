@@ -84,4 +84,8 @@ public class Project {
     public void setTargetKeys(List<TargetKeys> targetKeys) {
         this.targetKeys = targetKeys;
     }
+
+    public ProjectDTO toProjectDTO() {
+        return new ProjectDTO(projectName, projectCost, projectUrl);
+    }
 }
