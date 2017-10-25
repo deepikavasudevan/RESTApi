@@ -3,11 +3,17 @@ package deepikavasudevan.project;
 import deepikavasudevan.project.JSONModels.Project;
 import deepikavasudevan.project.JSONModels.ProjectDTO;
 import deepikavasudevan.project.JSONModels.TargetKeys;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ProjectParser {
     private Map<String, String[]> queries;
+    static Logger logger = LogManager.getLogger("ProjectParser");
     private final String projectid = "projectid";
 
     public ProjectParser(Map<String, String[]> queries) {
@@ -21,7 +27,7 @@ public class ProjectParser {
         if (queries.isEmpty()) {
             selectedProject = getMaximumCostProject(projects);
         } else {
-            if (queries.containsKey(projectid)) {
+            if (queries.containsKey(projectid) && queries.get(projectid) != null) {
                 selectedProject = getProjectWithId(queries.get(projectid), projects);
             } else {
                 for (Project project : projects) {
@@ -32,8 +38,15 @@ public class ProjectParser {
                 selectedProject = getMaximumCostProject(addedProjects);
             }
         }
+        Date date = null;
+        DateFormat format = new SimpleDateFormat("MMddyyyy HH:mm:ss", Locale.ENGLISH);
+        try {
+            date = format.parse(selectedProject.getExpiryDate());
+        } catch (ParseException e) {
+            logger.error(e.getMessage());
+        }
 
-        if (selectedProject != null && selectedProject.isEnabled())
+        if (selectedProject != null && selectedProject.isEnabled() && date != null && date.before(new Date()))
             return selectedProject.toProjectDTO();
         else
             return null;
