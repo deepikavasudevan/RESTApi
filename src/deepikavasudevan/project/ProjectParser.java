@@ -8,6 +8,7 @@ import java.util.*;
 
 public class ProjectParser {
     private Map<String, String[]> queries;
+    private final String projectid = "projectid";
 
     public ProjectParser(Map<String, String[]> queries) {
         this.queries = queries;
@@ -15,24 +16,27 @@ public class ProjectParser {
 
     public ProjectDTO getMatchingProjects(List<Project> projects) {
         List<Project> addedProjects = new ArrayList<>();
+        Project selectedProject;
 
         if (queries.isEmpty()) {
-            Project maxProject = getMaximumCostProject(projects);
-            return maxProject.toProjectDTO();
-        } else if (queries.containsKey("projectid")) {
-            Project project = getProjectWithId(queries.get("projectId"), projects);
-            if (project != null)
-                return project.toProjectDTO();
+            selectedProject = getMaximumCostProject(projects);
         } else {
-            for (Project project : projects) {
-                boolean addResponse = match(project);
-                if (addResponse)
-                    addedProjects.add(project);
+            if (queries.containsKey(projectid)) {
+                selectedProject = getProjectWithId(queries.get(projectid), projects);
+            } else {
+                for (Project project : projects) {
+                    boolean addResponse = match(project);
+                    if (addResponse)
+                        addedProjects.add(project);
+                }
+                selectedProject = getMaximumCostProject(addedProjects);
             }
-            Project maxProject = getMaximumCostProject(addedProjects);
-            return maxProject.toProjectDTO();
         }
-        return null;
+
+        if (selectedProject != null && selectedProject.isEnabled())
+            return selectedProject.toProjectDTO();
+        else
+            return null;
     }
 
     private Project getProjectWithId(String[] projectIds, List<Project> projects) {
@@ -55,13 +59,11 @@ public class ProjectParser {
     }
 
     public boolean match(Project project) {
-        boolean addResponse = true;
+        boolean addResponse = false;
 
         if (queries.containsKey("country")) {
             if (!Collections.disjoint(Arrays.asList(queries.get("country")), Arrays.asList(project.getTargetCountries()))) {
                 addResponse = true;
-            } else {
-                addResponse = false;
             }
         }
 
@@ -69,8 +71,6 @@ public class ProjectParser {
             for (TargetKeys target : project.getTargetKeys()) {
                 if (Arrays.asList(queries.get("number")).contains(target.getNumber())) {
                     addResponse = true;
-                } else {
-                    addResponse = false;
                 }
             }
         }
@@ -79,8 +79,6 @@ public class ProjectParser {
             for (TargetKeys target : project.getTargetKeys()) {
                 if (Arrays.asList(queries.get("keyword")).contains(target.getKeyword())) {
                     addResponse = true;
-                } else {
-                    addResponse = false;
                 }
             }
         }

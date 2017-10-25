@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,12 +21,15 @@ public class ProjectService {
     final int numberOfFields = 9;
     static String fileName = "projects.txt";
     FilesOperator filesOperator = new FilesOperator(fileName);
+    ArrayList<String> projectIds = new ArrayList<>();
     static Logger logger = LogManager.getLogger("ProjectService");
+    ObjectMapper object = new ObjectMapper();
 
     public AbstractMap.SimpleEntry<Boolean, String> create(String requestContents) {
         /*Checks if inputted JSON is valid*/
         try {
             AbstractMap.SimpleEntry<Boolean, String> result = validateJSONContents(requestContents);
+
             if (result != null) return result;
         } catch (JSONException exception) {
             logger.error(exception.getMessage());
@@ -54,6 +58,7 @@ public class ProjectService {
 
         if (!isAValidField(requestJson, "id"))
             return new AbstractMap.SimpleEntry<>(false, "Request does not contain ID");
+
         if (!isAValidField(requestJson, "projectName"))
             return new AbstractMap.SimpleEntry<>(false, "Request does not contain projectName");
         if (!isAValidField(requestJson, "creationDate"))
@@ -70,6 +75,20 @@ public class ProjectService {
             return new AbstractMap.SimpleEntry<>(false, "Request does not contain projectUrl");
         if (!isAValidField(requestJson, "targetKeys"))
             return new AbstractMap.SimpleEntry<>(false, "Request does not contain targetKeys");
+
+        try {
+            Project project = object.readValue(requestContents, Project.class);
+            String contents = filesOperator.getContentsFromFile();
+            List<Project> projects = getProjects(contents);
+            for (Project p : projects) {
+                if (p.getId().equals(project.getId())) {
+                    return new AbstractMap.SimpleEntry<>(false, "Project ID cannot be the same");
+                }
+            }
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+
         return null;
     }
 
@@ -125,10 +144,8 @@ public class ProjectService {
     }
 
     private List<Project> getProjects(String contents) throws IOException {
-        ObjectMapper object = new ObjectMapper();
         TypeReference<List<Project>> mapType = new TypeReference<List<Project>>() {
         };
         return object.readValue(contents, mapType);
     }
-
 }

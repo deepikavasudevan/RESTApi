@@ -28,6 +28,7 @@ public class ProjectController {
             logger.error(result.getValue());
             response.status(400);
             response.body(result.getValue());
+            response.type("application/json");
             return result.getValue();
         }
     };
@@ -45,6 +46,7 @@ public class ProjectController {
             logger.error(result.getValue());
             response.status(404);
             response.body(result.getValue());
+            response.type("application/json");
             return object.writeValueAsString(new ErrorMessage(result.getValue()));
         }
     };
